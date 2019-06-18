@@ -129,17 +129,19 @@ function get_weather_info()
 {
 	$service_key = '1S8z1o0Mg6QxYGxG5z3Efb87G2YqofNJcnFv4L47ru7gPncj2MRdlVu%2BK6uitzbqYnf6BSl19%2FXCXMuqtrXx8w%3D%3D';
 	$date = substr(_param_pick('&base_date='), 10, 8);
-	$time = substr(_param_pick('&base_time='), 10, 4);
+	$time = substr(_param_pick('&base_time='), 10, 2) . substr(_param_pick('&base_time='), 15, 2);
 	$x = substr(_param_pick('&nx='), 3);
 	$y = substr(_param_pick('&ny='), 3);
 
-	$grid = dfs_xy_conv('toXY', (double)$x, (double)$y);
+//	echo $time. "\n";
 
+	$grid = dfs_xy_conv('toXY', (double)$x, (double)$y);
+/*
 	echo "<위경도 변환(격자)>\n";
 	echo "  위도: ".$x."  => 격자x: ".$grid['x']."\n";      
 	echo "  경도: ".$y."  => 격자y: ".$grid['y']."\n";
 	echo "\n";
-
+ */
 	$service_url = 'http://newsky2.kma.go.kr/service/SecndSrtpdFrcstInfoService2/ForecastGrib';  
 	$service_full_url = $service_url . '?';
 	$service_full_url = $service_full_url . ('ServiceKey=' . $service_key);
@@ -204,7 +206,7 @@ function get_weather_info()
 	$temp = $items[3]->obsrValue;	//기온
 	$humid = $items[1]->obsrValue;	//습도
 	$precForm = $items[0]->obsrValue;	//강수형태
-	$prec = $items[2]->obsrValue;	//강수량(1H 기준)
+	$prec = $items[2]->obsrValue . "mm";	//강수량(1H 기준)
 	$windDirct = $items[5]->obsrValue;	//풍향
 	$windspeed = $items[7]->obsrValue;	// 풍속
 	
@@ -233,7 +235,7 @@ function get_weather_info()
 		$windDirct = "서풍";
 	else if($windDirct >= 293 && $windDirct <= 337)
 		$windDirct = "북서풍";
-
+/*
 	echo "< 현재 날씨 >\n";
 	echo "  기온: " . $temp . "℃ \n";
 	echo "  습도: " . $humid . "℃ \n";
@@ -242,12 +244,6 @@ function get_weather_info()
 	echo "  풍향: " . $windDirct . "\n";
 	echo "  풍속: " . $windspeed . "m/s\n";
 	
-	$json_list = json_encode(array(
-		'code' => $connectStat, 'msg' => (string)$resultMsg,
-		'temp' => (double)$temp, 'humid' => (int)$humid, 
-		'precForm' => $precForm, 'prec' => (double)$prec, 
-		'windDirct' => $windDirct, 'windspeed' => (int)$windspeed
-	), JSON_UNESCAPED_UNICODE);
 
 	echo "\n----------------------------------------------------".
 	   "----------------------------------------------------\n\n";
@@ -258,6 +254,13 @@ function get_weather_info()
 	print_r(json_encode($xml));
 
 	echo"\n\n오픈API로부터 XML형태로 받은 데이터를 Json형태로 인코드하고 해당 데이터를 클라이언트를 위해 더욱 간결화(encode)\n=> ";
+ */
+	$json_list = json_encode(array(
+		'code' => $connectStat, 'msg' => (string)$resultMsg,
+		'temp' => (double)$temp, 'humid' => (int)$humid, 
+		'precForm' => $precForm, 'prec' => (string)$prec, 
+		'windDirct' => $windDirct, 'windspeed' => (int)$windspeed
+	), JSON_UNESCAPED_UNICODE);
 	print_r($json_list);
 	curl_close($ch);
 }
