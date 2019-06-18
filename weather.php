@@ -40,7 +40,7 @@ function dfs_xy_conv($mode, $v1, $v2)
 		$rs['lng'] = (double)$v2;
 
 		$ra = tan($PI * 0.25 + ($v1) * $DEGRAD * 0.5);
-		$ra = $re * $sf / pow($ra, $sn);
+ 		$ra = $re * $sf / pow($ra, $sn);
 
 		$theta = $v2 * $DEGRAD - $olon;
 		if ($theta > $PI) $theta -= 2.0 * $PI;
@@ -76,7 +76,7 @@ function dfs_xy_conv($mode, $v1, $v2)
 			}
 			else $theta = atan2($xn, $yn);
 		}
-
+ 		
 		$alon = $theta / $sn + $olon;
 		$rs['lat'] = $alat * $RADDEG;
 		$rs['lng'] = $alon * $RADDEG;
@@ -136,9 +136,9 @@ function get_weather_info()
 	$grid = dfs_xy_conv('toXY', (double)$x, (double)$y);
 
 	echo "<위경도 변환(격자)>\n";
-        echo "  위도: ".$x."  => 격자x: ".$grid['x']."\n";      
-        echo "  경도: ".$y."  => 격자y: ".$grid['y']."\n";
-        echo "\n";
+	echo "  위도: ".$x."  => 격자x: ".$grid['x']."\n";      
+	echo "  경도: ".$y."  => 격자y: ".$grid['y']."\n";
+	echo "\n";
 
 	$service_url = 'http://newsky2.kma.go.kr/service/SecndSrtpdFrcstInfoService2/ForecastGrib';  
 	$service_full_url = $service_url . '?';
@@ -148,35 +148,117 @@ function get_weather_info()
 	$service_full_url = $service_full_url . ('&nx=' . $grid['x']);
 	$service_full_url = $service_full_url . ('&ny=' . $grid['y']);
 	$service_full_url = $service_full_url . ('&numOfRows=' . '10');
-	
+
 	header("Content-Type:application/json");
-	
+
 	$ch = curl_init();
 	curl_setopt($ch, CURLOPT_URL, $service_full_url);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 	curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-	
+
 	$jsonData = curl_exec($ch);
+
 	$xml = new SimpleXMLElement($jsonData);
 
-        $items = $xml->body->items->item;
+	$items = $xml->body->items->item;
 
-        echo "< 현재 날씨 >\n";
-        echo "  기온: " . $items[3]->obsrValue . "℃ \n";
-        echo "  습도: " . $items[1]->obsrValue . "℃ \n";
-        echo "  강수형태: " . $items[0]->obsrValue . "\n";
-        echo "  시간당 강수량: " . $items[2]->obsrValue . "\n";
-        echo "  풍향: " . $items[5]->obsrValue . "\n";
-        echo "  풍속: " . $items[7]->obsrValue . "\n";
-        echo "\n";
+	$resultCode = $xml->header->resultCode;
+	$resultMsg = $xml->header->resultMsg;
+
+	if($resultCode == 0)
+		$connectStat = "NORMAL_CODE(정상)";
+	else if($resultCode == 1)
+		$connectStat = "APPLICATION_ERROR(어플리케이션 에러)";
+	else if($resultCode == 2)
+		$connectStat = "DB_ERROR(데이터베이스 에러)";
+	else if($resultCode == 3)
+		$connectstat = "NODATA_ERROR(데이터없음 에러)";
+	else if($resultCode == 4)
+		$connectstat = "HTTP_ERROR(HTTP 에러)";
+	else if($resultCode == 5)
+		$connectstat = "SERVICETIMEOUT_ERROR(서비스 연결실패 에러)";
+	else if($resultCode == 10)
+		$connectstat = "INVALID_REQUEST_PARAMETER_ERROR(잘못된 요청 파라메터 에러)";
+	else if($resultCode == 11)
+		$connectstat = "NO_MANDATORY_REQUEST_PARAMETERS_ERROR(필수 요청 파라메터 없음)";
+	else if($resultCode == 12)
+		$connectstat = "NO_OPENAPI_SERVICE_ERROR(해당 오픈API 서비스가 없거나 폐기됨)";
+	else if($resultCode == 20)
+		$connectstat = "SERVICE_ACCESS_DENIED_ERROR(서비스 접근 거부)";
+	else if($resultCode == 21)
+		$connectstat = "TEMPORARILY_DISABLE_THE_SERVICEKEY_ERROR(일시적으로 사용할 수 없는 서비스키)";
+	else if($resultCode == 22)
+		$connectstat = "LIMITED_NUMBER_OF_SERVICE_REQUESTS_EXCEEDS_ERROR(일일 트래픽요청 횟수 초과)";
+	else if($resultCode == 11)
+		$connectstat = "SERVICE_KEY_IS_NOT_REGISTERED_ERROR(등록되지 않은 서비스키)";
+	else if($resultCode == 12)
+		$connectstat = "DEADLINE_HAS_EXPIRED_ERROR(기한만료된 서비스키)";
+	else if($resultCode == 20)
+		$connectstat = "UNREGISTERED_IP_ERROR(등록되지 않은 IP)";
+	else if($resultCode == 21)
+		$connectstat = "UNSIGNED_CALL_ERROR(서명되지 않은 호출)";
+	else if($resultCode == 22)
+		$connectstat = "UNKNOWN_ERROR(기타 에러)";
 	
-	echo "----------------------------------------------------".
-	     "----------------------------------------------------\n";
+	$temp = $items[3]->obsrValue;	//기온
+	$humid = $items[1]->obsrValue;	//습도
+	$precForm = $items[0]->obsrValue;	//강수형태
+	$prec = $items[2]->obsrValue;	//강수량(1H 기준)
+	$windDirct = $items[5]->obsrValue;	//풍향
+	$windspeed = $items[7]->obsrValue;	// 풍속
+	
+	switch($precForm)
+	{
+	case 0: $precForm = "없음"; break;
+	case 1: $precForm = "비가 내리는 중입니다"; break;
+	case 2: $precForm = "비와 눈이 함께 내리는 중입니다"; break;
+	case 3: $precForm = "눈이 내리는 중입니다"; break;
+	case 4: $precForm = "소나기가 내리는 중입니다"; break;
+	}
+	
+	if(($windDirct >= 0 && $windDirct <= 22)||($windDirct >= 338 && $windDirct <= 360))
+		$windDirct = "북풍";
+	else if($windDirct >= 23 && $windDirct <= 67)
+		$windDirct = "북동풍";
+	else if($windDirct >= 68 && $windDirct <= 112)
+		$windDirct = "동풍";
+	else if($windDirct >= 113 && $windDirct <= 157)
+		$windDirct = "남동풍";
+	else if($windDirct >= 158 && $windDirct <= 202)
+		$windDirct = "남풍";
+	else if($windDirct >= 203 && $windDirct <= 247)
+		$windDirct = "남서풍";
+	else if($windDirct >= 248 && $windDirct <= 292)
+		$windDirct = "서풍";
+	else if($windDirct >= 293 && $windDirct <= 337)
+		$windDirct = "북서풍";
+
+	echo "< 현재 날씨 >\n";
+	echo "  기온: " . $temp . "℃ \n";
+	echo "  습도: " . $humid . "℃ \n";
+	echo "  강수형태: " . $precForm . "\n";
+	echo "  강수량(1H 기준): " . $prec . "mm\n";
+	echo "  풍향: " . $windDirct . "\n";
+	echo "  풍속: " . $windspeed . "m/s\n";
+	
+	$json_list = json_encode(array(
+		'code' => $connectStat, 'msg' => (string)$resultMsg,
+		'temp' => (double)$temp, 'humid' => (int)$humid, 
+		'precForm' => $precForm, 'prec' => (double)$prec, 
+		'windDirct' => $windDirct, 'windspeed' => (int)$windspeed
+	), JSON_UNESCAPED_UNICODE);
+
+	echo "\n----------------------------------------------------".
+	   "----------------------------------------------------\n\n";
+	
 	print_r($grid);
 	echo "\n";
-	print_r($jsonData);
-	
+
+	print_r(json_encode($xml));
+
+	echo"\n\n오픈API로부터 XML형태로 받은 데이터를 Json형태로 인코드하고 해당 데이터를 클라이언트를 위해 더욱 간결화(encode)\n=> ";
+	print_r($json_list);
 	curl_close($ch);
 }
 ?>
