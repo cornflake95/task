@@ -203,16 +203,16 @@ function get_weather_info()
 	else if($resultCode == 22)
 		$connectstat = "UNKNOWN_ERROR(기타 에러)";
 	
-	$temp = $items[3]->obsrValue;	//기온
-	$humid = $items[1]->obsrValue;	//습도
+	$temp = $items[3]->obsrValue . "℃";//기온
+	$humid = $items[1]->obsrValue . "%";	//습도
 	$precForm = $items[0]->obsrValue;	//강수형태
 	$prec = $items[2]->obsrValue . "mm";	//강수량(1H 기준)
 	$windDirct = $items[5]->obsrValue;	//풍향
-	$windspeed = $items[7]->obsrValue;	// 풍속
+	$windspeed = $items[7]->obsrValue . "m/s";	// 풍속
 	
 	switch($precForm)
 	{
-	case 0: $precForm = "없음"; break;
+	case 0: $precForm = "비가 안 내리는 중입니다."; break;
 	case 1: $precForm = "비가 내리는 중입니다"; break;
 	case 2: $precForm = "비와 눈이 함께 내리는 중입니다"; break;
 	case 3: $precForm = "눈이 내리는 중입니다"; break;
@@ -220,21 +220,21 @@ function get_weather_info()
 	}
 	
 	if(($windDirct >= 0 && $windDirct <= 22)||($windDirct >= 338 && $windDirct <= 360))
-		$windDirct = "북풍";
+		$windDirct = "북풍↑";
 	else if($windDirct >= 23 && $windDirct <= 67)
-		$windDirct = "북동풍";
+		$windDirct = "북동풍↗";
 	else if($windDirct >= 68 && $windDirct <= 112)
-		$windDirct = "동풍";
+		$windDirct = "동풍→";
 	else if($windDirct >= 113 && $windDirct <= 157)
-		$windDirct = "남동풍";
+		$windDirct = "남동풍↘";
 	else if($windDirct >= 158 && $windDirct <= 202)
-		$windDirct = "남풍";
+		$windDirct = "남풍↓";
 	else if($windDirct >= 203 && $windDirct <= 247)
-		$windDirct = "남서풍";
+		$windDirct = "남서풍↙";
 	else if($windDirct >= 248 && $windDirct <= 292)
-		$windDirct = "서풍";
+		$windDirct = "서풍←";
 	else if($windDirct >= 293 && $windDirct <= 337)
-		$windDirct = "북서풍";
+		$windDirct = "북서풍↖";
 /*
 	echo "< 현재 날씨 >\n";
 	echo "  기온: " . $temp . "℃ \n";
@@ -257,11 +257,11 @@ function get_weather_info()
  */
 	$json_list = json_encode(array(
 		'code' => $connectStat, 'msg' => (string)$resultMsg,
-		'temp' => (double)$temp, 'humid' => (int)$humid, 
+		'temp' => (string)$temp, 'humid' => (string)$humid, 
 		'precForm' => $precForm, 'prec' => (string)$prec, 
-		'windDirct' => $windDirct, 'windspeed' => (int)$windspeed
+		'windDirct' => $windDirct, 'windspeed' => (string)$windspeed
 	), JSON_UNESCAPED_UNICODE);
-	print_r($json_list);
+	print_r(stripslashes($json_list));
 	curl_close($ch);
 }
 ?>
