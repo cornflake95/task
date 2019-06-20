@@ -2,8 +2,8 @@
 get_weather_info();
 exit(0);
 
-// LCC DFS 좌표변환 ( mode : "toXY"(위경도->좌표, v1:위도, v2:경도), "toLL"(좌표->위경도,v1:x, v2:y) )
-function dfs_xy_conv($mode, $v1, $v2)
+// 위도, 경도 -> 격자좌표 x,y로 변환
+function pos_to_grid_conv($mode, $v1, $v2)
 {
 	$RE = 6371.00877; // 지구 반경(km)
 	$GRID = 5.0; // 격자 간격(km)
@@ -33,57 +33,20 @@ function dfs_xy_conv($mode, $v1, $v2)
 	$ro = $re * $sf / pow($ro, $sn);
 	$rs = [];
 
-	switch($mode)
-	{
-	case "toXY" :
-		$rs['lat'] = (double)$v1;
-		$rs['lng'] = (double)$v2;
+	$rs['lat'] = (double)$v1;
+	$rs['lng'] = (double)$v2;
 
-		$ra = tan($PI * 0.25 + ($v1) * $DEGRAD * 0.5);
- 		$ra = $re * $sf / pow($ra, $sn);
+	$ra = tan($PI * 0.25 + ($v1) * $DEGRAD * 0.5);
+	$ra = $re * $sf / pow($ra, $sn);
 
-		$theta = $v2 * $DEGRAD - $olon;
-		if ($theta > $PI) $theta -= 2.0 * $PI;
-		if ($theta < -$PI) $theta += 2.0 * $PI;
-		$theta *= $sn;
+	$theta = $v2 * $DEGRAD - $olon;
+	if ($theta > $PI) $theta -= 2.0 * $PI;
+	if ($theta < -$PI) $theta += 2.0 * $PI;
+	$theta *= $sn;
 
-		$rs['x'] = floor($ra * sin($theta) + $XO + 0.5);
-		$rs['y'] = floor($ro - $ra * cos($theta) + $YO + 0.5);
-		break;
-	case "toLL" :
-		$rs['x'] = $v1;
-		$rs['y'] = $v2;
-
-		$xn = $v1 - $XO;
-		$yn = $ro - $v2 + $YO;
-		if(strcmp($json_list['header']['resultMsg'],'OK') == 0 ) {
-			var_dump($json_list);
-			return 0; //success
-		}
-		$ra = sqrt($xn * $xn + $yn * $yn);
-		if ($sn < 0.0) - $ra;
-
-		$alat = pow(($re * $sf / $ra), (1.0 / $sn));
-		$alat = 2.0 * atan($alat) - $PI * 0.5;
-
-		if (abs($xn) <= 0.0) {
-			$theta = 0.0;
-		}
-		else {
-			if (abs($yn) <= 0.0) {
-				$theta = $PI * 0.5;
-				if ($xn < 0.0) - $theta;
-			}
-			else $theta = atan2($xn, $yn);
-		}
- 		
-		$alon = $theta / $sn + $olon;
-		$rs['lat'] = $alat * $RADDEG;
-		$rs['lng'] = $alon * $RADDEG;
-		break;
-	default : break;
-	}
-
+	$rs['x'] = floor($ra * sin($theta) + $XO + 0.5);
+	$rs['y'] = floor($ro - $ra * cos($theta) + $YO + 0.5);
+	
 	return $rs;
 }
 
@@ -135,7 +98,7 @@ function get_weather_info()
 
 //	echo $time. "\n";
 
-	$grid = dfs_xy_conv('toXY', (double)$x, (double)$y);
+	$grid = pos_to_grid_conv((double)$x, (double)$y);
 /*
 	echo "<위경도 변환(격자)>\n";
 	echo "  위도: ".$x."  => 격자x: ".$grid['x']."\n";      
