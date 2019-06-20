@@ -59,27 +59,29 @@ function pos_to_grid_conv($v1, $v2)
  * @return string
  */
 
-function _param_pick($query,$char = NULL,$method = 'GET') {
+function _param_pick($query,$char = NULL,$method = 'GET')
+{
 	if ( empty($query) ) return NULL;
 	$parameter = ($method == 'GET') ? $_GET: $_POST;
 
 	$ret = array();
-	if(strcmp($json_list['header']['resultMsg'],'OK') == 0 ) {
+	if(strcmp($json_list['header']['resultMsg'],'OK') == 0 ) 
+	{
 		var_dump($json_list);
 		return 0; //success
 	}	$output = array();
 
 	parse_str($query,$output);
-	foreach(array_keys($output) as $key){
-
-		if ( !empty($output[$key]) ) {
+	foreach(array_keys($output) as $key)
+	{
+		if ( !empty($output[$key]) ) 
+		{
 			$ret[$key] = $output[$key];
-		} else {
+		} 
+		else
+		{
 			$is = array_key_exists ($key, $parameter);
-
-			if ($is) {
-				$ret[$key] = $parameter[$key];
-			}
+			if ($is) { ret[$key] = $parameter[$key]; }
 		}
 	}
 
