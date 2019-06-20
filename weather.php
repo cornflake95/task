@@ -3,7 +3,7 @@ get_weather_info();
 exit(0);
 
 // 위도, 경도 -> 격자좌표 x,y로 변환
-function pos_to_grid_conv($mode, $v1, $v2)
+function pos_to_grid_conv($v1, $v2)
 {
 	$RE = 6371.00877; // 지구 반경(km)
 	$GRID = 5.0; // 격자 간격(km)
